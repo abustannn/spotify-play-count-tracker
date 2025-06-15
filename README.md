@@ -1,4 +1,6 @@
 import json
+import time
+from collections import defaultdict
 from spotipy import Spotify
 from spotipy.oauth2 import SpotifyOAuth
 
@@ -39,5 +41,33 @@ def update_counts():
     save_counts(counts)
     print("✅ Play counts updated!")
 
+def show_top_artists_and_tracks(filename="play_counts.json", top_n=10):
+    try:
+        with open(filename, "r") as f:
+            play_data = json.load(f)
+    except FileNotFoundError:
+        print("⚠️ play_counts.json not found. Run the script to generate it.")
+        return
+
+    artist_counts = defaultdict(int)
+    track_counts = []
+
+    for full_title, count in play_data.items():
+        if " - " in full_title:
+            artist, song = full_title.split(" - ", 1)
+            artist_counts[artist] += count
+            track_counts.append((full_title, count))
+
+    sorted_artists = sorted(artist_counts.items(), key=lambda x: x[1], reverse=True)
+    print(f"\nTop {top_n} Artists by Play Count:\n")
+    for i, (artist, count) in enumerate(sorted_artists[:top_n], 1):
+        print(f"{i}. {artist} — {count} plays")
+
+    sorted_tracks = sorted(track_counts, key=lambda x: x[1], reverse=True)
+    print(f"\nTop {top_n} Songs by Play Count:\n")
+    for i, (track, count) in enumerate(sorted_tracks[:top_n], 1):
+        print(f"{i}. {track} — {count} plays")
+
 if __name__ == "__main__":
     update_counts()
+    show_top_artists_and_tracks(top_n=10)
